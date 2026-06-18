@@ -10,8 +10,8 @@ Crie:
    - src/lib/supabase.ts
 
 2. Variáveis de ambiente:
-   - VITE_SUPABASE_URL: https://pinkyudmrpahhbqzedqz.supabase.co/rest/v1/
-   - VITE_SUPABASE_ANON_KEY: sb_publishable_h4J9_B41BfwVQZtJPFiouQ_y5d4-4Ss
+   - VITE_SUPABASE_URL
+   - VITE_SUPABASE_ANON_KEY
 
 3. Tipos principais do banco:
    - src/types/database.ts
