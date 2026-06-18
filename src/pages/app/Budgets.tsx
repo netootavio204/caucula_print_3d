@@ -1,0 +1,35 @@
+import { Check, Download, FileText, PackageCheck, Pencil, Search, Trash2, X } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Button } from '../../components/ui/Button'
+import { Card } from '../../components/ui/Card'
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
+import { DataError, DataLoading } from '../../components/ui/DataState'
+import { EmptyState } from '../../components/ui/EmptyState'
+import { Input } from '../../components/ui/Input'
+import { StatusBadge } from '../../components/ui/StatusBadge'
+import { useToast } from '../../components/ui/Toast'
+import { useBudgets } from '../../hooks/useBudgets'
+import { getDatabaseErrorMessage } from '../../lib/databaseErrors'
+import { formatCurrency, formatDate } from '../../lib/formatters'
+import { generateBudgetPdf } from '../../lib/pdf'
+import type { BudgetRow } from '../../types/database'
+
+type Filter = 'pendente' | 'aprovado' | 'recusado' | 'expirado'
+type Action = 'approve' | 'reject' | 'finalize' | 'delete'
+const tabs: Array<[Filter, string]> = [['pendente', 'Em aberto'], ['aprovado', 'Aprovados'], ['recusado', 'Recusados'], ['expirado', 'Expirados']]
+
+export function Budgets() {
+  const hook = useBudgets(); const { showToast } = useToast(); const navigate = useNavigate(); const [filter, setFilter] = useState<Filter>('pendente'); const [search, setSearch] = useState(''); const [pending, setPending] = useState<{ budget: BudgetRow; action: Action } | null>(null); const [working, setWorking] = useState<string | null>(null)
+  const filtered = useMemo(() => { const term = search.trim().toLocaleLowerCase('pt-BR'); return hook.budgets.filter((budget) => { const statusMatches = filter === 'aprovado' ? budget.status === 'aprovado' || budget.status === 'baixado_estoque' : budget.status === filter; const searchMatches = !term || budget.project_name.toLocaleLowerCase('pt-BR').includes(term) || budget.client_name?.toLocaleLowerCase('pt-BR').includes(term); return statusMatches && searchMatches }) }, [filter, hook.budgets, search])
+  const execute = async () => { if (!pending) return; const { budget, action } = pending; setWorking(budget.id); setPending(null); try { if (action === 'approve') await hook.approveBudget(budget.id); if (action === 'reject') await hook.rejectBudget(budget.id); if (action === 'finalize') await hook.finalizeStock(budget.id); if (action === 'delete') await hook.deleteBudget(budget.id); showToast(action === 'finalize' ? 'Estoque atualizado com sucesso.' : action === 'delete' ? 'Orçamento excluído com sucesso.' : 'Orçamento atualizado com sucesso.', 'success') } catch (error) { showToast(getDatabaseErrorMessage(error, 'Não foi possível atualizar o orçamento.'), 'error') } finally { setWorking(null) } }
+  const pdf = async (id: string) => { setWorking(id); try { await generateBudgetPdf(id); showToast('PDF gerado com sucesso.', 'success') } catch (error) { showToast(getDatabaseErrorMessage(error, 'Não foi possível gerar o PDF.'), 'error') } finally { setWorking(null) } }
+  return <div className="space-y-5"><Card><div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between"><div className="flex gap-2 overflow-x-auto">{tabs.map(([id, label]) => <button key={id} onClick={() => setFilter(id)} className={`min-h-10 shrink-0 rounded-xl px-4 text-sm font-semibold ${filter === id ? 'bg-primary text-white' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'}`}>{label}</button>)}</div><div className="w-full lg:max-w-sm"><Input value={search} onChange={(event) => setSearch(event.target.value)} icon={<Search size={18} />} placeholder="Buscar cliente ou projeto" aria-label="Buscar orçamento" /></div></div></Card>
+    {hook.loading ? <Card><DataLoading /></Card> : hook.error ? <Card><DataError message={getDatabaseErrorMessage(new Error(hook.error), 'Erro ao carregar orçamentos.')} /></Card> : filtered.length === 0 ? <EmptyState icon={FileText} title="Nenhum orçamento encontrado" description="Os orçamentos deste status aparecerão aqui." /> : <div className="grid gap-5 xl:grid-cols-2">{filtered.map((budget) => <Card key={budget.id} className="p-5"><div className="flex items-start justify-between gap-3"><div><h2 className="font-bold text-slate-950">{budget.project_name}</h2><p className="mt-1 text-sm text-slate-500">{budget.client_name || 'Cliente não informado'}</p></div><StatusBadge status={budget.status} /></div><div className="mt-5 grid grid-cols-2 gap-3 rounded-xl bg-slate-50 p-4 text-sm sm:grid-cols-4"><Metric label="Data" value={formatDate(budget.created_at)} /><Metric label="Peso" value={`${hook.weightByBudget[budget.id] ?? 0} g`} /><Metric label="Tempo" value={`${budget.total_time_hours.toFixed(2)} h`} /><Metric label="Valor" value={formatCurrency(budget.suggested_price)} accent /></div><div className="mt-5 flex flex-wrap gap-2">{budget.status === 'pendente' && <><Button className="min-h-9 px-3" onClick={() => setPending({ budget, action: 'approve' })}><Check size={16} />Aprovar</Button><Button variant="outline" className="min-h-9 px-3" onClick={() => navigate(`/app/orcamento?editar=${budget.id}`)}><Pencil size={16} />Editar</Button></>}{(budget.status === 'pendente' || budget.status === 'aprovado') && <Button variant="outline" className="min-h-9 px-3 text-danger" onClick={() => setPending({ budget, action: 'reject' })}><X size={16} />Recusar</Button>}{budget.status === 'aprovado' && <Button variant="secondary" className="min-h-9 px-3" onClick={() => setPending({ budget, action: 'finalize' })}><PackageCheck size={16} />Dar baixa</Button>}<Button variant="outline" className="min-h-9 px-3" loading={working === budget.id} onClick={() => void pdf(budget.id)}><Download size={16} />PDF</Button>{budget.status !== 'baixado_estoque' && <Button variant="ghost" className="min-h-9 px-3 text-danger hover:bg-red-50" onClick={() => setPending({ budget, action: 'delete' })}><Trash2 size={16} />Excluir</Button>}</div></Card>)}</div>}
+    <ConfirmDialog open={Boolean(pending)} title={dialogTitle(pending?.action)} description={dialogDescription(pending?.action)} confirmLabel="Confirmar" onCancel={() => setPending(null)} onConfirm={() => void execute()} />
+  </div>
+}
+
+function Metric({ label, value, accent }: { label: string; value: string; accent?: boolean }) { return <div><p className="text-xs text-slate-500">{label}</p><p className={`mt-1 font-semibold ${accent ? 'text-primary' : 'text-slate-800'}`}>{value}</p></div> }
+function dialogTitle(action?: Action) { return action === 'approve' ? 'Aprovar orçamento?' : action === 'reject' ? 'Recusar orçamento?' : action === 'finalize' ? 'Dar baixa no estoque?' : 'Excluir orçamento?' }
+function dialogDescription(action?: Action) { return action === 'reject' ? 'A reserva de filamento será liberada.' : action === 'finalize' ? 'Os filamentos e insumos serão deduzidos definitivamente. Esta ação não pode ser desfeita.' : action === 'delete' ? 'O orçamento será removido e suas reservas serão liberadas.' : 'O orçamento será marcado como aprovado.' }
