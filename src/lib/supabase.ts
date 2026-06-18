@@ -4,14 +4,17 @@ import type { Database } from '../types/database'
 const configuredUrl = import.meta.env.VITE_SUPABASE_URL?.trim()
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim()
 
-if (!configuredUrl || !supabaseAnonKey) {
-  throw new Error('Configure VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no arquivo .env.')
-}
+// Indica se as variáveis de ambiente estão configuradas corretamente
+export const supabaseConfigured = Boolean(configuredUrl && supabaseAnonKey)
 
-// O SDK recebe a raiz do projeto; aceita tambem a URL REST fornecida pelo painel.
-const supabaseUrl = configuredUrl.replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '')
+// O SDK recebe a raiz do projeto; aceita também a URL REST fornecida pelo painel.
+const supabaseUrl = configuredUrl
+  ? configuredUrl.replace(/\/rest\/v1\/?$/, '').replace(/\/$/, '')
+  : 'https://placeholder.supabase.co'
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+const anonKey = supabaseAnonKey ?? 'placeholder-key'
+
+export const supabase = createClient<Database>(supabaseUrl, anonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
