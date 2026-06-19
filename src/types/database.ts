@@ -20,6 +20,7 @@ export type ProfileRow = {
   company_city: string | null
   company_state: string | null
   company_logo_url: string | null
+  company_logo_path: string | null
   created_at: string
   updated_at: string
 }
@@ -100,6 +101,7 @@ export type ClientRow = {
   city: string | null
   state: string | null
   notes: string | null
+  client_type: 'cliente' | 'consignatario' | 'ambos'
   created_at: string
   updated_at: string
 }
@@ -217,8 +219,140 @@ export type ReadyStockRow = {
   sale_price: number
   image_url: string | null
   notes: string | null
+  internal_code: string | null
+  public_code: string | null
+  category: string | null
+  public_name: string | null
+  public_description: string | null
+  catalog_image_1_url: string | null
+  catalog_image_1_path: string | null
+  catalog_image_2_url: string | null
+  catalog_image_2_path: string | null
+  is_catalog_visible: boolean
+  direct_sale_price: number
+  consignment_price: number
+  quantity_internal: number
+  quantity_consigned: number
+  quantity_sold: number
+  status: 'disponivel' | 'em_consignacao' | 'vendido' | 'esgotado' | 'oculto'
   created_at: string
   updated_at: string
+}
+
+export type ReadyStockMovementRow = {
+  id: string
+  user_id: string
+  ready_stock_id: string
+  movement_type: 'entrada_manual' | 'entrada_orcamento' | 'saida_venda' | 'saida_consignacao' | 'devolucao_consignacao' | 'ajuste_manual' | 'cancelamento_venda'
+  quantity: number
+  description: string | null
+  sale_id: string | null
+  consignment_id: string | null
+  budget_id: string | null
+  created_at: string
+}
+
+export type SaleRow = {
+  id: string
+  user_id: string
+  client_id: string | null
+  budget_id: string | null
+  sale_type: 'venda_direta' | 'venda_orcamento'
+  sale_code: string | null
+  total_value: number
+  paid_value: number
+  open_value: number
+  payment_status: 'pago' | 'nao_pago' | 'parcialmente_pago' | 'cancelado'
+  delivery_status: 'pendente' | 'entregue' | 'retirado' | 'enviado' | 'cancelado'
+  payment_method: 'dinheiro' | 'pix' | 'cartao_credito' | 'cartao_debito' | 'transferencia' | 'outro' | null
+  sale_date: string
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type SaleItemRow = {
+  id: string
+  user_id: string
+  sale_id: string
+  ready_stock_id: string | null
+  product_code: string | null
+  product_name: string
+  quantity: number
+  unit_price: number
+  total_price: number
+  created_at: string
+}
+
+export type ConsignmentRow = {
+  id: string
+  user_id: string
+  consignee_client_id: string | null
+  consignment_code: string | null
+  sent_date: string
+  expected_settlement_date: string | null
+  status: 'em_consignacao' | 'parcialmente_vendido' | 'vendido_nao_pago' | 'vendido_pago' | 'parcialmente_pago' | 'finalizado' | 'cancelado'
+  total_consigned_value: number
+  total_sold_value: number
+  total_paid_value: number
+  total_open_value: number
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type ConsignmentItemRow = {
+  id: string
+  user_id: string
+  consignment_id: string
+  ready_stock_id: string | null
+  product_code: string | null
+  product_name: string
+  quantity_sent: number
+  quantity_sold: number
+  quantity_returned: number
+  quantity_remaining: number
+  consignment_unit_price: number
+  total_consigned_value: number
+  sold_value: number
+  paid_value: number
+  open_value: number
+  status: 'em_consignacao' | 'vendido_nao_pago' | 'vendido_pago' | 'parcialmente_pago' | 'devolvido' | 'finalizado'
+  created_at: string
+  updated_at: string
+}
+
+export type ConsignmentPaymentRow = {
+  id: string
+  user_id: string
+  consignment_id: string
+  consignment_item_id: string | null
+  amount: number
+  payment_method: SaleRow['payment_method']
+  payment_date: string
+  notes: string | null
+  created_at: string
+}
+
+export type PublicCatalogRow = Pick<
+  ReadyStockRow,
+  | 'id'
+  | 'user_id'
+  | 'public_code'
+  | 'public_name'
+  | 'public_description'
+  | 'category'
+  | 'catalog_image_1_url'
+  | 'catalog_image_2_url'
+  | 'is_catalog_visible'
+  | 'created_at'
+>
+
+export type PublicCompanyRow = {
+  user_id: string
+  company_name: string | null
+  company_phone: string | null
+  company_logo_url: string | null
 }
 
 export type ProjectModelSupplyRow = {
@@ -255,10 +389,25 @@ export interface Database {
       budget_supplies: TableDefinition<BudgetSupplyRow, InsertRow<BudgetSupplyRow, 'user_id' | 'budget_id' | 'supply_id' | 'quantity_used' | 'cost'>>
       budget_extra_costs: TableDefinition<BudgetExtraCostRow, InsertRow<BudgetExtraCostRow, 'user_id' | 'budget_id' | 'name' | 'value'>>
       ready_stock: TableDefinition<ReadyStockRow, InsertRow<ReadyStockRow, 'user_id' | 'name'>>
+      ready_stock_movements: TableDefinition<ReadyStockMovementRow, InsertRow<ReadyStockMovementRow, 'user_id' | 'ready_stock_id' | 'movement_type' | 'quantity'>>
+      sales: TableDefinition<SaleRow, InsertRow<SaleRow, 'user_id'>>
+      sale_items: TableDefinition<SaleItemRow, InsertRow<SaleItemRow, 'user_id' | 'sale_id' | 'product_name'>>
+      consignments: TableDefinition<ConsignmentRow, InsertRow<ConsignmentRow, 'user_id'>>
+      consignment_items: TableDefinition<ConsignmentItemRow, InsertRow<ConsignmentItemRow, 'user_id' | 'consignment_id' | 'product_name'>>
+      consignment_payments: TableDefinition<ConsignmentPaymentRow, InsertRow<ConsignmentPaymentRow, 'user_id' | 'consignment_id'>>
       project_model_supplies: TableDefinition<ProjectModelSupplyRow, InsertRow<ProjectModelSupplyRow, 'user_id' | 'project_model_id' | 'supply_id' | 'quantity_used'>>
       project_model_extra_costs: TableDefinition<ProjectModelExtraCostRow, InsertRow<ProjectModelExtraCostRow, 'user_id' | 'project_model_id' | 'name' | 'value'>>
     }
-    Views: Record<string, never>
+    Views: {
+      public_catalog_view: {
+        Row: PublicCatalogRow
+        Relationships: []
+      }
+      public_company_view: {
+        Row: PublicCompanyRow
+        Relationships: []
+      }
+    }
     Functions: {
       create_filament_with_entry: {
         Args: { p_type_brand: string; p_color: string; p_weight_kg: number; p_price_paid: number; p_supplier_image_url?: string | null }
@@ -285,6 +434,10 @@ export interface Database {
         Args: { p_stock: Json; p_stock_id?: string | null; p_deduct_materials?: boolean }
         Returns: string
       }
+      create_sale: { Args: { p_sale: Json; p_item: Json }; Returns: string }
+      update_sale_details: { Args: { p_sale_id: string; p_sale: Json }; Returns: undefined }
+      register_sale_payment: { Args: { p_sale_id: string; p_amount: number }; Returns: undefined }
+      cancel_sale: { Args: { p_sale_id: string }; Returns: undefined }
     }
     Enums: Record<string, never>
     CompositeTypes: Record<string, never>

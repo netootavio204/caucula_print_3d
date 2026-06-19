@@ -1,0 +1,12 @@
+import {useCallback,useEffect,useState} from 'react'
+import {supabase} from '../lib/supabase'
+import type {Json,SaleItemRow,SaleRow} from '../types/database'
+import {useAuth} from './useAuth'
+export interface SaleWithItem extends SaleRow { item: SaleItemRow|null }
+export interface SaleInput {clientId:string|null;budgetId:string|null;saleType:'venda_direta'|'venda_orcamento';saleCode:string;readyStockId:string|null;productName:string;productCode:string;quantity:number;unitPrice:number;paidValue:number;deliveryStatus:SaleRow['delivery_status'];paymentMethod:SaleRow['payment_method'];saleDate:string;notes:string}
+export function useSales(){const {user}=useAuth();const [sales,setSales]=useState<SaleWithItem[]>([]);const [loading,setLoading]=useState(true);const [error,setError]=useState<string|null>(null)
+ const load=useCallback(async()=>{if(!user)return;setLoading(true);const [a,b]=await Promise.all([supabase.from('sales').select('*').eq('user_id',user.id).order('sale_date',{ascending:false}),supabase.from('sale_items').select('*').eq('user_id',user.id)]);const e=a.error??b.error;if(e)setError(e.message);else{const items=b.data??[];setSales((a.data??[]).map(s=>({...s,item:items.find(i=>i.sale_id===s.id)??null})));setError(null)}setLoading(false)},[user]);useEffect(()=>{void load()},[load])
+ const createSale=async(i:SaleInput)=>{const {error:e}=await supabase.rpc('create_sale',{p_sale:{client_id:i.clientId,budget_id:i.budgetId,sale_type:i.saleType,sale_code:i.saleCode,paid_value:i.paidValue,delivery_status:i.deliveryStatus,payment_method:i.paymentMethod,sale_date:i.saleDate,notes:i.notes} as Json,p_item:{ready_stock_id:i.readyStockId,product_name:i.productName,product_code:i.productCode,quantity:i.quantity,unit_price:i.unitPrice} as Json});if(e)throw new Error(e.message);await load()}
+ const updateSale=async(id:string,i:SaleInput)=>{const {error:e}=await supabase.rpc('update_sale_details',{p_sale_id:id,p_sale:{client_id:i.clientId,delivery_status:i.deliveryStatus,payment_method:i.paymentMethod,sale_date:i.saleDate,notes:i.notes} as Json});if(e)throw new Error(e.message);await load()}
+ const payment=async(id:string,amount:number)=>{const {error:e}=await supabase.rpc('register_sale_payment',{p_sale_id:id,p_amount:amount});if(e)throw new Error(e.message);await load()};const cancel=async(id:string)=>{const {error:e}=await supabase.rpc('cancel_sale',{p_sale_id:id});if(e)throw new Error(e.message);await load()}
+ return {sales,loading,error,reload:load,createSale,updateSale,registerPayment:payment,cancelSale:cancel}}

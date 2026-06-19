@@ -9,10 +9,12 @@ import { PublicOnlyRoute } from './PublicOnlyRoute'
 const Account = lazy(() => import('../pages/app/Account').then((module) => ({ default: module.Account })))
 const Budgets = lazy(() => import('../pages/app/Budgets').then((module) => ({ default: module.Budgets })))
 const Calculator = lazy(() => import('../pages/app/Calculator').then((module) => ({ default: module.Calculator })))
+const Catalog = lazy(() => import('../pages/app/Catalog').then((module) => ({ default: module.Catalog })))
 const Clients = lazy(() => import('../pages/app/Clients').then((module) => ({ default: module.Clients })))
 const Costs = lazy(() => import('../pages/app/Costs').then((module) => ({ default: module.Costs })))
 const Projects = lazy(() => import('../pages/app/Projects').then((module) => ({ default: module.Projects })))
 const Stock = lazy(() => import('../pages/app/Stock').then((module) => ({ default: module.Stock })))
+const Sales = lazy(() => import('../pages/app/Sales').then((module) => ({ default: module.Sales })))
 const ForgotPassword = lazy(() => import('../pages/public/ForgotPassword').then((module) => ({ default: module.ForgotPassword })))
 const LandingPage = lazy(() => import('../pages/public/LandingPage').then((module) => ({ default: module.LandingPage })))
 const Login = lazy(() => import('../pages/public/Login').then((module) => ({ default: module.Login })))
@@ -35,6 +37,8 @@ export function AppRoutes() {
         <Route path="orcamentos" element={<Budgets />} />
         <Route path="projetos" element={<Projects />} />
         <Route path="estoque" element={<Stock />} />
+        <Route path="catalogo" element={<Catalog />} />
+        <Route path="vendas" element={<Sales />} />
         <Route path="clientes" element={<Clients />} />
         <Route path="insumos" element={<Costs />} />
         <Route path="minha-conta" element={<Account />} />
