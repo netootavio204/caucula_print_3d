@@ -10,6 +10,7 @@ const Account = lazy(() => import('../pages/app/Account').then((module) => ({ de
 const Budgets = lazy(() => import('../pages/app/Budgets').then((module) => ({ default: module.Budgets })))
 const Calculator = lazy(() => import('../pages/app/Calculator').then((module) => ({ default: module.Calculator })))
 const Catalog = lazy(() => import('../pages/app/Catalog').then((module) => ({ default: module.Catalog })))
+const Consignments = lazy(() => import('../pages/app/Consignments').then((module) => ({ default: module.Consignments })))
 const Clients = lazy(() => import('../pages/app/Clients').then((module) => ({ default: module.Clients })))
 const Costs = lazy(() => import('../pages/app/Costs').then((module) => ({ default: module.Costs })))
 const Projects = lazy(() => import('../pages/app/Projects').then((module) => ({ default: module.Projects })))
@@ -39,6 +40,7 @@ export function AppRoutes() {
         <Route path="estoque" element={<Stock />} />
         <Route path="catalogo" element={<Catalog />} />
         <Route path="vendas" element={<Sales />} />
+        <Route path="consignacao" element={<Consignments />} />
         <Route path="clientes" element={<Clients />} />
         <Route path="insumos" element={<Costs />} />
         <Route path="minha-conta" element={<Account />} />

@@ -1,12 +1,12 @@
 # CalculaPrint 3D
 
-Aplicação web para calcular orçamentos de impressão 3D, controlar insumos, reservar materiais e acompanhar clientes, projetos e estoque de produtos prontos.
+Aplicação web para precificação de impressão 3D, orçamentos, estoque de materiais e produtos prontos, catálogo público, vendas e consignação.
 
 ## Tecnologias
 
 - React, Vite e TypeScript
-- Tailwind CSS
-- Supabase Auth, PostgreSQL e Row Level Security
+- Tailwind CSS e React Router
+- Supabase Auth, PostgreSQL, Storage e Row Level Security
 - jsPDF
 
 ## Requisitos
@@ -23,31 +23,78 @@ Aplicação web para calcular orçamentos de impressão 3D, controlar insumos, r
 npm install
 ```
 
-2. Crie o arquivo `.env` com base no `.env.example`:
+2. Crie `.env` com base em `.env.example`:
 
 ```env
 VITE_SUPABASE_URL=https://SEU_PROJETO.supabase.co
 VITE_SUPABASE_ANON_KEY=SUA_CHAVE_PUBLICA
 ```
 
-Use somente a chave pública/anon no frontend. Chaves `service_role` e tokens pessoais nunca devem ser adicionados ao `.env`, ao código-fonte ou ao provedor de deploy.
+Não existem novas variáveis obrigatórias na V2. Use somente a chave pública no frontend. Nunca adicione `service_role` ou tokens pessoais ao `.env`, código-fonte ou provedor de deploy.
 
-3. Execute, em ordem, as migrations da pasta `supabase/migrations` pelo SQL Editor do Supabase ou com a CLI:
+3. Aplique todas as migrations de `supabase/migrations` em ordem:
 
 ```bash
 supabase link --project-ref SEU_PROJECT_REF
 supabase db push
 ```
 
-As migrations criam tabelas, políticas RLS, gatilhos e funções transacionais necessárias para autenticação, cadastros, orçamentos e estoque.
+As migrations da V2 adicionam:
 
-4. Em **Authentication > URL Configuration** no Supabase, configure a URL do site e inclua as URLs de redirecionamento usadas localmente e em produção. Para desenvolvimento, use `http://localhost:5173`.
+- campos de catálogo e quantidades em `ready_stock`;
+- `ready_stock_movements`, `sales`, `sale_items`;
+- `consignments`, `consignment_items`, `consignment_payments`;
+- views públicas seguras;
+- buckets e policies do Storage;
+- RPCs transacionais de vendas, consignação e estoque;
+- restrições contra quantidades negativas.
+
+4. Em **Authentication > URL Configuration**, configure a URL do site e os redirecionamentos. Para desenvolvimento, use `http://localhost:5173`.
 
 5. Inicie o projeto:
 
 ```bash
 npm run dev
 ```
+
+## Storage
+
+Os buckets necessários são criados pelas migrations:
+
+- `catalog-products`: imagens públicas dos produtos, limite de 2 MB por imagem;
+- `company-assets`: logo pública da empresa, limite de 1 MB.
+
+Formatos aceitos: WEBP, JPG, JPEG e PNG. Upload, substituição e exclusão são restritos à pasta do usuário autenticado. A leitura dos arquivos é pública para permitir o catálogo.
+
+## Como testar
+
+### Catálogo
+
+1. Crie um produto em **Estoque**.
+2. Abra **Catálogo** e preencha código, nome e descrição públicos.
+3. Envie a imagem principal e, opcionalmente, a segunda imagem.
+4. Publique o produto e abra `/` sem login.
+5. Confirme que o card mostra somente imagens, código, nome, descrição e categoria, sem preço, custo ou quantidade.
+6. Teste substituir/remover imagens, ocultar e excluir com confirmação.
+
+### Vendas
+
+1. Abra **Vendas** e crie uma venda direta usando um produto disponível.
+2. Confirme a redução do estoque interno e a movimentação `saida_venda`.
+3. Registre pagamento total ou parcial e confira o valor em aberto.
+4. Cancele a venda e confirme a devolução ao estoque e a movimentação `cancelamento_venda`.
+
+### Consignação
+
+1. Cadastre um cliente do tipo **Consignatário** ou **Ambos**.
+2. Crie um lote em **Consignação** e adicione produtos do estoque.
+3. Confirme a redução do estoque interno e o aumento da quantidade consignada.
+4. Registre venda consignada, pagamento parcial e devolução.
+5. Confira quantidades, valores, status, indicadores e histórico do estoque.
+
+### V1
+
+Cadastre filamento, máquina e parâmetros globais. Crie um orçamento, confirme a reserva, gere o PDF A4, recuse para liberar a reserva ou aprove e dê baixa definitiva. Os custos e lucros internos não devem aparecer no PDF do cliente.
 
 ## Verificação e build
 
@@ -57,15 +104,14 @@ npm run build
 npm run preview
 ```
 
-O build é gerado em `dist`. As configurações incluídas em `vercel.json` e `public/_redirects` mantêm as rotas do React Router funcionando em Vercel e Netlify.
+O build é gerado em `dist`. `vercel.json` e `public/_redirects` mantêm as rotas do React Router funcionando em hospedagens com fallback de SPA.
 
-## Fluxo de validação
-
-Após criar uma conta, cadastre pelo menos um filamento e uma máquina em **Insumos / Custos**, revise os parâmetros globais e então crie clientes, projetos e orçamentos. Ao salvar um orçamento, o material é reservado; ao recusar, a reserva é liberada; ao dar baixa, o estoque real e o reservado são atualizados pela função transacional do banco.
+O teste transacional da V2.5/V2.6 está em `supabase/tests/v2_phase_5_consignment_flow.sql`. Execute apenas em ambiente controlado; ele usa `ROLLBACK` e não persiste os dados do cenário.
 
 ## Segurança
 
-- O acesso do navegador usa apenas a chave pública do Supabase.
-- Todas as tabelas de usuário têm RLS e isolam dados por `auth.uid()`.
-- Operações críticas de orçamento e estoque são executadas em funções transacionais no banco.
-- Não publique tokens administrativos nem contorne as políticas RLS no frontend.
+- Todas as tabelas privadas usam RLS e isolam dados por `auth.uid()`.
+- A página pública consulta apenas `public_catalog_view` e `public_company_view`.
+- As views públicas não expõem preço, custo, lucro, quantidades, clientes, vendas ou consignações.
+- Operações críticas de orçamento, estoque, venda e consignação são transacionais no banco.
+- Não publique credenciais administrativas nem contorne as policies no frontend.

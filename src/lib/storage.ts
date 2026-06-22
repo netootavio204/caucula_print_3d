@@ -98,8 +98,26 @@ export async function deleteCatalogProductImage(path: string) {
 }
 
 export async function replaceCatalogProductImage(params: CatalogProductImageParams & { currentPath?: string | null }): Promise<StorageUploadResult> {
-  if (params.currentPath) await deleteCatalogProductImage(params.currentPath)
-  return uploadCatalogProductImage(params)
+  if (params.position !== 1 && params.position !== 2) throw new Error('A posição da imagem deve ser 1 ou 2.')
+  const extension = validateFile(params.file, PRODUCT_MAX_SIZE)
+  const userId = await requireUserId()
+  const product = await getCatalogProduct(userId, params.readyStockId)
+  const path = `${userId}/${normalizeCode(product.publicCode)}/image-${params.position}.${extension}`
+  const currentPath = params.currentPath ? assertOwnPath(params.currentPath, userId) : null
+  const { error } = await supabase.storage.from('catalog-products').upload(path, params.file, {
+    cacheControl: '3600',
+    contentType: params.file.type,
+    upsert: path === currentPath,
+  })
+  if (error) throw new Error(error.message)
+  if (currentPath && currentPath !== path) {
+    const { error: deleteError } = await supabase.storage.from('catalog-products').remove([currentPath])
+    if (deleteError) {
+      await supabase.storage.from('catalog-products').remove([path])
+      throw new Error(deleteError.message)
+    }
+  }
+  return { path, url: getPublicStorageUrl('catalog-products', path) }
 }
 
 export async function uploadCompanyLogo(file: File): Promise<StorageUploadResult> {

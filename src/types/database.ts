@@ -434,10 +434,21 @@ export interface Database {
         Args: { p_stock: Json; p_stock_id?: string | null; p_deduct_materials?: boolean }
         Returns: string
       }
+      record_ready_stock_sale: { Args: { p_stock_id: string; p_quantity: number }; Returns: undefined }
       create_sale: { Args: { p_sale: Json; p_item: Json }; Returns: string }
       update_sale_details: { Args: { p_sale_id: string; p_sale: Json }; Returns: undefined }
       register_sale_payment: { Args: { p_sale_id: string; p_amount: number }; Returns: undefined }
       cancel_sale: { Args: { p_sale_id: string }; Returns: undefined }
+      create_consignment: { Args: { p_consignment: Json; p_items: Json }; Returns: string }
+      add_consignment_item: { Args: { p_consignment_id: string; p_item: Json }; Returns: string }
+      update_consignment_details: { Args: { p_consignment_id: string; p_consignment: Json }; Returns: undefined }
+      register_consignment_sale: { Args: { p_item_id: string; p_quantity: number }; Returns: undefined }
+      register_consignment_return: { Args: { p_item_id: string; p_quantity: number }; Returns: undefined }
+      register_consignment_payment: {
+        Args: { p_item_id: string; p_amount: number; p_payment_method?: string | null; p_payment_date?: string; p_notes?: string | null }
+        Returns: undefined
+      }
+      cancel_consignment: { Args: { p_consignment_id: string }; Returns: undefined }
     }
     Enums: Record<string, never>
     CompositeTypes: Record<string, never>

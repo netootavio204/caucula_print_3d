@@ -146,9 +146,6 @@ export function useCatalog() {
   const deleteProduct = async (id: string) => {
     const currentUser = requireUser()
     const product = getProduct(id)
-    for (const path of [product.catalog_image_1_path, product.catalog_image_2_path]) {
-      if (path) await deleteCatalogProductImage(path)
-    }
     const { error: deleteError } = await supabase
       .from('ready_stock')
       .delete()
@@ -156,6 +153,9 @@ export function useCatalog() {
       .eq('user_id', currentUser.id)
     if (deleteError) throw new Error(deleteError.message)
     await load()
+    const paths = [product.catalog_image_1_path, product.catalog_image_2_path].filter((path): path is string => Boolean(path))
+    const cleanup = await Promise.allSettled(paths.map((path) => deleteCatalogProductImage(path)))
+    if (cleanup.some((result) => result.status === 'rejected')) throw new Error('Produto excluído, mas uma imagem antiga não pôde ser removida do Storage.')
   }
 
   return {

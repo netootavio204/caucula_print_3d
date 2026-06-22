@@ -1,4 +1,4 @@
-import { Boxes, Calculator, CircleDollarSign, FolderKanban, Images, LogOut, PackageCheck, ShoppingCart, UsersRound, UserRound, X } from 'lucide-react'
+import { Boxes, Calculator, CircleDollarSign, FolderKanban, HandCoins, Images, LogOut, PackageCheck, ShoppingCart, UsersRound, UserRound, X } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { cn } from '../../lib/cn'
 import { Brand } from './Brand'
@@ -10,6 +10,7 @@ const items = [
   { to: '/app/estoque', label: 'Estoque', icon: PackageCheck },
   { to: '/app/catalogo', label: 'Catálogo', icon: Images },
   { to: '/app/vendas', label: 'Vendas', icon: ShoppingCart },
+  { to: '/app/consignacao', label: 'Consignação', icon: HandCoins },
   { to: '/app/clientes', label: 'Meus clientes', icon: UsersRound },
   { to: '/app/insumos', label: 'Insumos / Custos', icon: Boxes },
   { to: '/app/minha-conta', label: 'Minha conta', icon: UserRound },

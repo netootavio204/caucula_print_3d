@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import type { ClientRow } from '../types/database'
 import { useAuth } from './useAuth'
 
-export interface ClientInput { name: string; document: string | null; phone: string | null; email: string | null; instagram: string | null; address: string | null; city: string | null; state: string | null; notes: string | null }
+export interface ClientInput { name: string; document: string | null; phone: string | null; email: string | null; instagram: string | null; address: string | null; city: string | null; state: string | null; notes: string | null; client_type: ClientRow['client_type'] }
 export interface ClientWithMetrics extends ClientRow { budget_count: number; closed_budget_count: number; total_sold: number }
 
 export function useClients() {
