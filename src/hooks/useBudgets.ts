@@ -55,6 +55,7 @@ export function useBudgets() {
       energy_cost: calculation.energyCost, maintenance_cost: calculation.maintenanceCost, depreciation_cost: calculation.depreciationCost,
       supplies_cost: calculation.suppliesCost, extra_costs: calculation.extraCosts, failure_margin_value: calculation.failureMarginValue,
       total_production_cost: calculation.totalProductionCost, gross_profit: calculation.grossProfit, fees_value: calculation.feesValue,
+      markup_percent: form.saleMarkupPercent, manual_final_price: form.manualFinalPrice, final_price: calculation.suggestedPrice,
       suggested_price: calculation.suggestedPrice, price_per_piece: calculation.pricePerPiece,
       net_profit: calculation.netProfit, net_profit_per_piece: calculation.netProfitPerPiece,
     }
@@ -66,6 +67,7 @@ export function useBudgets() {
       p_budget_id: form.id ?? null,
     })
     if (mutationError) throw new Error(mutationError.message)
+    await saveBudgetPricingFields(data, form, calculation)
     await load()
     return data
   }
@@ -77,4 +79,20 @@ export function useBudgets() {
   }
 
   return { budgets, weightByBudget, loading, error, reload: load, getBudget, saveBudget, approveBudget: (id: string) => runAction('approve_budget', id), rejectBudget: (id: string) => runAction('reject_budget', id), finalizeStock: (id: string) => runAction('finalize_budget_stock', id), deleteBudget: (id: string) => runAction('delete_budget_safely', id) }
+}
+
+async function saveBudgetPricingFields(budgetId: string | null, form: BudgetFormData, calculation: BudgetCalculationResult) {
+  if (!budgetId) return
+  const { error } = await supabase.from('budgets').update({
+    markup_percent: form.saleMarkupPercent ?? null,
+    manual_final_price: form.manualFinalPrice ?? null,
+    final_price: calculation.suggestedPrice,
+  }).eq('id', budgetId)
+  if (!error) return
+  const message = error.message.toLowerCase()
+  if (message.includes('schema cache') || message.includes('markup_percent') || message.includes('manual_final_price') || message.includes('final_price')) {
+    console.info('[budgets.saveBudget] optional pricing fields unavailable; apply budget pricing migration', { code: error.code, message: error.message })
+    return
+  }
+  throw new Error(error.message)
 }

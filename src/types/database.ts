@@ -131,6 +131,20 @@ export type ProjectModelRow = {
   updated_at: string
 }
 
+export type ProjectModelFilamentRow = {
+  id: string
+  user_id: string
+  project_model_id: string
+  model_id: string
+  filament_id: string
+  color_name: string | null
+  weight_used_g: number
+  weight_g: number
+  cost: number
+  created_at: string
+  updated_at: string
+}
+
 export type BudgetRow = {
   id: string
   user_id: string
@@ -170,6 +184,9 @@ export type BudgetRow = {
   total_production_cost: number
   gross_profit: number
   fees_value: number
+  markup_percent: number | null
+  manual_final_price: number | null
+  final_price: number | null
   suggested_price: number
   price_per_piece: number
   net_profit: number
@@ -384,6 +401,7 @@ export interface Database {
       global_settings: TableDefinition<GlobalSettingsRow, InsertRow<GlobalSettingsRow, 'user_id'>>
       clients: TableDefinition<ClientRow, InsertRow<ClientRow, 'user_id' | 'name'>>
       project_models: TableDefinition<ProjectModelRow, InsertRow<ProjectModelRow, 'user_id' | 'name'>>
+      project_model_filaments: TableDefinition<ProjectModelFilamentRow, InsertRow<ProjectModelFilamentRow, 'user_id' | 'project_model_id' | 'model_id' | 'filament_id' | 'weight_used_g' | 'weight_g'>>
       budgets: TableDefinition<BudgetRow, InsertRow<BudgetRow, 'user_id' | 'project_name'>>
       budget_filaments: TableDefinition<BudgetFilamentRow, InsertRow<BudgetFilamentRow, 'user_id' | 'budget_id' | 'filament_id' | 'weight_used_g' | 'cost'>>
       budget_supplies: TableDefinition<BudgetSupplyRow, InsertRow<BudgetSupplyRow, 'user_id' | 'budget_id' | 'supply_id' | 'quantity_used' | 'cost'>>
@@ -427,7 +445,7 @@ export interface Database {
       delete_budget_safely: { Args: { p_budget_id: string }; Returns: undefined }
       expire_pending_budgets: { Args: Record<string, never>; Returns: number }
       save_project_model: {
-        Args: { p_model: Json; p_supplies: Json; p_extra_costs: Json; p_model_id?: string | null }
+        Args: { p_model: Json; p_supplies: Json; p_extra_costs: Json; p_filaments?: Json; p_model_id?: string | null }
         Returns: string
       }
       save_ready_stock: {

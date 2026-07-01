@@ -14,6 +14,7 @@ const Consignments = lazy(() => import('../pages/app/Consignments').then((module
 const Clients = lazy(() => import('../pages/app/Clients').then((module) => ({ default: module.Clients })))
 const Costs = lazy(() => import('../pages/app/Costs').then((module) => ({ default: module.Costs })))
 const Projects = lazy(() => import('../pages/app/Projects').then((module) => ({ default: module.Projects })))
+const QuickCalculator = lazy(() => import('../pages/app/QuickCalculator').then((module) => ({ default: module.QuickCalculator })))
 const Stock = lazy(() => import('../pages/app/Stock').then((module) => ({ default: module.Stock })))
 const Sales = lazy(() => import('../pages/app/Sales').then((module) => ({ default: module.Sales })))
 const ForgotPassword = lazy(() => import('../pages/public/ForgotPassword').then((module) => ({ default: module.ForgotPassword })))
@@ -35,6 +36,7 @@ export function AppRoutes() {
       <Route path="/app" element={<AppLayout />}>
         <Route index element={<Navigate to="orcamento" replace />} />
         <Route path="orcamento" element={<Calculator />} />
+        <Route path="calculadora-rapida" element={<QuickCalculator />} />
         <Route path="orcamentos" element={<Budgets />} />
         <Route path="projetos" element={<Projects />} />
         <Route path="estoque" element={<Stock />} />

@@ -1,0 +1,23 @@
+-- OPCIONAL: limpeza futura da funcionalidade removida "Projetos Externos".
+-- NAO EXECUTAR automaticamente.
+-- Use somente apos revisar backups, dados existentes, politicas RLS e impactos operacionais.
+--
+-- As migrations historicas foram preservadas. Este arquivo existe apenas como guia
+-- comentado caso o banco precise ser limpo manualmente no futuro.
+--
+-- Possiveis objetos criados pela funcionalidade:
+-- - public.external_project_filaments
+-- - public.external_project_plates
+-- - public.external_project_files
+-- - public.external_projects
+-- - storage bucket: external-projects
+--
+-- Exemplo de limpeza futura, intencionalmente comentado:
+--
+-- begin;
+-- drop table if exists public.external_project_filaments;
+-- drop table if exists public.external_project_plates;
+-- drop table if exists public.external_project_files;
+-- drop table if exists public.external_projects;
+-- delete from storage.buckets where id = 'external-projects';
+-- commit;

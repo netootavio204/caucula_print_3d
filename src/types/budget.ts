@@ -74,6 +74,8 @@ export interface BudgetFormData {
   sizeY: number | null
   sizeZ: number | null
   machineId: string
+  saleMarkupPercent?: number | null
+  manualFinalPrice?: number | null
   filaments: Array<{ filamentId: string; weightUsedG: number }>
   supplies: Array<{ supplyId: string; quantityUsed: number }>
   extraCosts: BudgetExtraCostInput[]

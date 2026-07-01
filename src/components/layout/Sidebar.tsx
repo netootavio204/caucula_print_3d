@@ -5,6 +5,7 @@ import { Brand } from './Brand'
 
 const items = [
   { to: '/app/orcamento', label: 'Orçamento', icon: Calculator },
+  { to: '/app/calculadora-rapida', label: 'Calculadora Rápida', icon: Calculator },
   { to: '/app/orcamentos', label: 'Meus orçamentos', icon: CircleDollarSign },
   { to: '/app/projetos', label: 'Projetos', icon: FolderKanban },
   { to: '/app/estoque', label: 'Estoque', icon: PackageCheck },

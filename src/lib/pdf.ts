@@ -85,7 +85,9 @@ export function renderBudgetPdf(pdf: JsPdfDocument, { budget, profile, materials
   ])
 
   y = drawCard(pdf, y, 'Materiais utilizados', materials.length ? materials.map((item) => `• ${item}`) : ['Nenhum material detalhado.'])
-  y = drawTotalCard(pdf, y, budget.suggested_price, budget.price_per_piece)
+  const totalPrice = budget.final_price ?? budget.suggested_price
+  const unitPrice = budget.total_pieces > 0 ? totalPrice / budget.total_pieces : budget.price_per_piece
+  y = drawTotalCard(pdf, y, totalPrice, unitPrice)
 
   const termLines = [
     `Este orçamento tem validade de ${budget.validity_days} dias a partir da data de emissão.`,
